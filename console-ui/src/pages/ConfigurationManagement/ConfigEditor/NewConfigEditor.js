@@ -84,9 +84,11 @@ class ConfigEditor extends React.Component {
       subscriberDataSource: [],
       openAdvancedSettings: false,
       editorClass: 'editor-normal',
+      originValue: '',
     };
     this.successDialog = React.createRef();
     this.diffEditorDialog = React.createRef();
+    this.dialog = React.createRef();
   }
 
   componentDidMount() {
@@ -230,7 +232,7 @@ class ConfigEditor extends React.Component {
     if (validateContent.validate({ content, type })) {
       return this._publishConfig();
     } else {
-      return new Promise((resolve) => {
+      return new Promise(resolve => {
         Dialog.confirm({
           content: locale.codeValErrorPrompt,
           onOk: () => resolve(this._publishConfig()),
@@ -238,6 +240,27 @@ class ConfigEditor extends React.Component {
         });
       });
     }
+  }
+
+  getOriginValue(beta = false, decide = false) {
+    const namespace = getParams('namespace');
+    const { dataId, group } = this.state.form;
+    const params = {
+      dataId,
+      group,
+      namespaceId: namespace,
+      tenant: namespace,
+    };
+    if (beta) {
+      params.beta = true;
+    } else {
+      params.show = 'all';
+    }
+    return request.get('v1/cs/configs', { params }).then(res => {
+      const form = beta ? res.data : res;
+      if (!form) return false;
+      return res;
+    });
   }
 
   _publishConfig(beta = false) {
@@ -248,29 +271,39 @@ class ConfigEditor extends React.Component {
     }
     const form = { ...this.state.form, content: this.getCodeVal(), betaIps };
     const payload = {};
-    Object.keys(form).forEach(key => {
-      payload[key] = form[key];
-    });
-    let configTags = this.state.form.config_tags;
-    if (configTags.length > 0) {
-      payload.config_tags = configTags.join(',');
-    }
-    const stringify = require('qs/lib/stringify');
-    this.setState({ loading: true });
-    return request({
-      url: 'v1/cs/configs',
-      method: 'post',
-      data: stringify(payload),
-      headers,
-    }).then(res => {
-      if (res) {
-        if (isNewConfig) {
-          this.setState({ isNewConfig: false });
+    return this.getOriginValue(beta).then(msg => {
+      if (this.codeVal !== msg.content) {
+        return new Promise(resolve => {
+          Dialog.alert({
+            content: '配置内容在你更改前有提交，请刷新页面重新更改',
+          });
+        });
+      } else {
+        Object.keys(form).forEach(key => {
+          payload[key] = form[key];
+        });
+        let configTags = this.state.form.config_tags;
+        if (configTags.length > 0) {
+          payload.config_tags = configTags.join(',');
         }
-        this.getConfig(beta);
+        const stringify = require('qs/lib/stringify');
+        this.setState({ loading: true });
+        return request({
+          url: 'v1/cs/configs',
+          method: 'post',
+          data: stringify(payload),
+          headers,
+        }).then(res => {
+          if (res) {
+            if (isNewConfig) {
+              this.setState({ isNewConfig: false });
+            }
+            this.getConfig(beta);
+          }
+          this.setState({ loading: false });
+          return res;
+        });
       }
-      this.setState({ loading: false });
-      return res;
     });
   }
 
