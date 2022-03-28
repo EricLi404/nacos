@@ -3,12 +3,15 @@
 .project
 .settings
 target
+target/
+/target/
 .idea
 .vscode
 .DS_Store
 .factorypath
 /logs
 *.iml
+*.class
 *.log
 node_modules
 test/derby.log
