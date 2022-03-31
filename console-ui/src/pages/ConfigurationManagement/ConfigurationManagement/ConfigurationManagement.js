@@ -368,16 +368,16 @@ class ConfigurationManagement extends React.Component {
           {locale.details}
         </a>
         <span style={{ marginRight: 5 }}>|</span>
-        <a style={{ marginRight: 5 }} onClick={this.showCode.bind(this, record)}>
-          {locale.sampleCode}
-        </a>
-        <span style={{ marginRight: 5 }}>|</span>
         <a style={{ marginRight: 5 }} onClick={this.goEditor.bind(this, record)}>
           {locale.edit}
         </a>
         <span style={{ marginRight: 5 }}>|</span>
-        <a style={{ marginRight: 5 }} onClick={this.removeConfig.bind(this, record)}>
-          {locale.deleteAction}
+        <a style={{ marginRight: 5 }} onClick={this.goVersion.bind(this, record)}>
+          {locale.version}
+        </a>
+        <span style={{ marginRight: 5 }}>|</span>
+        <a style={{ marginRight: 5 }} onClick={this.goListenerQuery.bind(this, record)}>
+          {locale.listenerQuery}
         </a>
         <span style={{ marginRight: 5 }}>|</span>
 
@@ -390,9 +390,8 @@ class ConfigurationManagement extends React.Component {
           }
           triggerType={'click'}
         >
-          <Menu onItemClick={this.chooseNav.bind(this, record)}>
-            <Menu.Item key={'nav1'}>{locale.version}</Menu.Item>
-            <Menu.Item key={'nav3'}>{locale.listenerQuery}</Menu.Item>
+          <Menu>
+            <Menu.Item onClick={this.removeConfig.bind(this, record)}>{locale.deleteAction}</Menu.Item>
           </Menu>
         </Dropdown>
       </div>
@@ -482,6 +481,26 @@ class ConfigurationManagement extends React.Component {
       }&namespace=${this.tenant}&edasAppName=${this.edasAppName}&searchDataId=${
         this.dataId
       }&searchGroup=${this.group}&pageSize=${this.pageSize}&pageNo=${this.pageNo}`
+    );
+  }
+
+  goVersion(record) {
+    this.serverId = getParams('serverId') || '';
+    this.tenant = getParams('namespace') || ''; // 为当前实例保存tenant参数
+    this.props.history.push(
+      `/historyRollback?historyServerId=${this.serverId || ''}&historyDataId=${
+        record.dataId
+      }&historyGroup=${record.group}&namespace=${this.tenant}`
+    );
+  }
+
+  goListenerQuery(record) {
+    this.serverId = getParams('serverId') || '';
+    this.tenant = getParams('namespace') || ''; // 为当前实例保存tenant参数
+    this.props.history.push(
+      `/listeningToQuery?listeningServerId=${this.serverId || ''}&listeningDataId=${
+        record.dataId
+      }&listeningGroup=${record.group}&namespace=${this.tenant}`
     );
   }
 
