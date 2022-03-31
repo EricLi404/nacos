@@ -575,14 +575,13 @@ class ConfigEditor extends React.Component {
                 )}
                 {isBeta && (
                   <Select
-                    size="medium"
+                    size="large"
                     hasArrow
-                    autoWidth
+                    style={{ width: 300 }}
                     mode="tag"
                     filterLocal
                     dataSource={subscriberDataSource}
                     onChange={betaIps => this.setState({ betaIps: betaIps.join(',') })}
-                    hasClear
                     value={betaIps ? betaIps.split(',') : []}
                   />
                 )}
