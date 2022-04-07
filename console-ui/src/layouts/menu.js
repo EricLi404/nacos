@@ -54,38 +54,44 @@ const authorityControlMenu = {
   ],
 };
 
+const clusterManagementVirtualMenu = {
+  key: 'clusterManagementVirtual',
+  children: [
+    {
+      key: 'clusterManagement',
+      url: '/clusterManagement',
+    },
+  ],
+};
+
+const namespaceMenu = {
+  key: 'namespace',
+  url: '/namespace',
+};
+
+const serviceManagementVirtualMenu = {
+  key: 'serviceManagementVirtual',
+  children: [
+    {
+      key: 'serviceManagement',
+      url: '/serviceManagement',
+    },
+    {
+      key: 'subscriberList',
+      url: '/subscriberList',
+    },
+  ],
+};
+
 export default function(model) {
   const { token = '{}' } = localStorage;
   const { globalAdmin } = isJsonString(token) ? JSON.parse(token) || {} : {};
 
   return [
     model === 'naming' ? undefined : configurationMenu,
-    {
-      key: 'serviceManagementVirtual',
-      children: [
-        {
-          key: 'serviceManagement',
-          url: '/serviceManagement',
-        },
-        {
-          key: 'subscriberList',
-          url: '/subscriberList',
-        },
-      ],
-    },
+    globalAdmin ? serviceManagementVirtualMenu : undefined,
     globalAdmin ? authorityControlMenu : undefined,
-    {
-      key: 'namespace',
-      url: '/namespace',
-    },
-    {
-      key: 'clusterManagementVirtual',
-      children: [
-        {
-          key: 'clusterManagement',
-          url: '/clusterManagement',
-        },
-      ],
-    },
+    globalAdmin ? namespaceMenu : undefined,
+    globalAdmin ? clusterManagementVirtualMenu : undefined,
   ].filter(item => item);
 }
