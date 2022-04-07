@@ -39,16 +39,35 @@ import {
   Grid,
   ConfigProvider,
 } from '@alifd/next';
+import stringify from 'qs/lib/stringify';
 
 const { Row, Col } = Grid;
 
 const LANGUAGE_LIST = [
-  { value: 'text', label: 'TEXT' },
-  { value: 'json', label: 'JSON' },
-  { value: 'xml', label: 'XML' },
-  { value: 'yaml', label: 'YAML' },
-  { value: 'html', label: 'HTML' },
-  { value: 'properties', label: 'Properties' },
+  {
+    value: 'text',
+    label: 'TEXT',
+  },
+  {
+    value: 'json',
+    label: 'JSON',
+  },
+  {
+    value: 'xml',
+    label: 'XML',
+  },
+  {
+    value: 'yaml',
+    label: 'YAML',
+  },
+  {
+    value: 'html',
+    label: 'HTML',
+  },
+  {
+    value: 'properties',
+    label: 'Properties',
+  },
 ];
 
 const TAB_LIST = ['production', 'beta'];
@@ -213,7 +232,12 @@ class ConfigEditor extends React.Component {
 
   setCodeVal(codeVal) {
     const { form } = this.state;
-    this.setState({ form: { ...form, content: codeVal } });
+    this.setState({
+      form: {
+        ...form,
+        content: codeVal,
+      },
+    });
     if (this.monacoEditor) {
       this.monacoEditor.setValue(codeVal);
     }
@@ -229,7 +253,12 @@ class ConfigEditor extends React.Component {
     if (!content) {
       return;
     }
-    if (validateContent.validate({ content, type })) {
+    if (
+      validateContent.validate({
+        content,
+        type,
+      })
+    ) {
       return this._publishConfig();
     } else {
       return new Promise(resolve => {
@@ -263,59 +292,133 @@ class ConfigEditor extends React.Component {
     });
   }
 
+  isConfChange() {
+    const namespace = getParams('namespace');
+    const { dataId, group } = this.state.form;
+    const params = {
+      dataId,
+      group,
+      namespaceId: namespace,
+      tenant: namespace,
+      show: 'all',
+    };
+    return request.get('v1/cs/configs', { params }).then(res => {
+      return this.codeVal !== res.content;
+    });
+  }
+
   _publishConfig(beta = false) {
     const { betaIps, isNewConfig } = this.state;
     const headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
     if (beta) {
       headers.betaIps = betaIps;
     }
-    const form = { ...this.state.form, content: this.getCodeVal(), betaIps };
+    const form = {
+      ...this.state.form,
+      content: this.getCodeVal(),
+      betaIps,
+    };
     const payload = {};
-    return this.getOriginValue(beta).then(msg => {
-      if (this.codeVal !== msg.content) {
-        return new Promise(resolve => {
-          Dialog.alert({
-            content: '配置内容在你更改前有提交，请刷新页面重新更改',
-          });
-        });
-      } else {
-        Object.keys(form).forEach(key => {
-          payload[key] = form[key];
-        });
-        let configTags = this.state.form.config_tags;
-        if (configTags.length > 0) {
-          payload.config_tags = configTags.join(',');
-        }
-        const stringify = require('qs/lib/stringify');
-        this.setState({ loading: true });
-        return request({
-          url: 'v1/cs/configs',
-          method: 'post',
-          data: stringify(payload),
-          headers,
-        }).then(res => {
-          if (res) {
-            if (isNewConfig) {
-              this.setState({ isNewConfig: false });
-            }
-            this.getConfig(beta);
-          }
-          this.setState({ loading: false });
-          return res;
-        });
-      }
+    Object.keys(form).forEach(key => {
+      payload[key] = form[key];
     });
+    let configTags = this.state.form.config_tags;
+    if (configTags.length > 0) {
+      payload.config_tags = configTags.join(',');
+    }
+    const stringify = require('qs/lib/stringify');
+    this.setState({ loading: true });
+    if (this.isBetaIng()) {
+      return new Promise(resolve => {
+        Dialog.alert({
+          content: '有 Beta 正在进行，请等待或刷新后重试',
+        });
+      });
+    } else if (this.isConfChange()) {
+      return new Promise(resolve => {
+        Dialog.alert({
+          content: '配置内容在你更改前有提交，请刷新页面重新更改',
+        });
+      });
+    } else {
+      return request({
+        url: 'v1/cs/configs',
+        method: 'post',
+        data: stringify(payload),
+        headers,
+      }).then(res => {
+        if (res) {
+          if (isNewConfig) {
+            this.setState({ isNewConfig: false });
+          }
+          this.getConfig(beta);
+        }
+        this.setState({ loading: false });
+        return res;
+      });
+    }
   }
 
   publishBeta() {
-    return this._publishConfig(true).then(res => {
-      if (res) {
-        this.setState({
-          betaPublishSuccess: true,
-          tabActiveKey: 'beta',
+    const { locale = {} } = this.props;
+    const { type } = this.state.form;
+    if (this.state.isNewConfig) {
+      this.validation();
+    }
+    const content = this.getCodeVal();
+    if (!content) {
+      return;
+    }
+    if (
+      validateContent.validate({
+        content,
+        type,
+      })
+    ) {
+      return this._publishConfig(true).then(res => {
+        if (res) {
+          this.setState({
+            betaPublishSuccess: true,
+            tabActiveKey: 'beta',
+          });
+          return res;
+        }
+      });
+    } else {
+      return new Promise(resolve => {
+        Dialog.confirm({
+          content: locale.codeValErrorPrompt,
+          onOk: () =>
+            resolve(
+              this._publishConfig(true).then(res => {
+                if (res) {
+                  this.setState({
+                    betaPublishSuccess: true,
+                    tabActiveKey: 'beta',
+                  });
+                  return res;
+                }
+              })
+            ),
+          onCancel: () => resolve(false),
         });
-        return res;
-      }
+      });
+    }
+  }
+
+  isBetaIng() {
+    const namespace = getParams('namespace');
+    const { dataId, group } = this.state.form;
+    const params = {
+      dataId,
+      group,
+      namespaceId: namespace,
+      tenant: namespace,
+      beta: true,
+    };
+
+    return request.get('v1/cs/configs', { params }).then(res => {
+      return !res.data;
     });
   }
 
@@ -412,7 +515,10 @@ class ConfigEditor extends React.Component {
       if (!form) return false;
       const { type, content, configTags, betaIps } = form;
       this.setState({ betaIps });
-      this.changeForm({ ...form, config_tags: configTags ? configTags.split(',') : [] });
+      this.changeForm({
+        ...form,
+        config_tags: configTags ? configTags.split(',') : [],
+      });
       this.initMoacoEditor(type, content);
       this.codeVal = content;
       this.setState({
@@ -500,7 +606,10 @@ class ConfigEditor extends React.Component {
       <div className="config-editor">
         <Loading
           shape="flower"
-          style={{ position: 'relative', width: '100%' }}
+          style={{
+            position: 'relative',
+            width: '100%',
+          }}
           visible={loading}
           tip="Loading..."
           color="#333"
@@ -681,7 +790,7 @@ class ConfigEditor extends React.Component {
                   title = locale.betaPublish;
                 }
                 if (this.diffcb === 'publish' && tabActiveKey === 'beta') {
-                  title = locale.stopPublishBeta;
+                  title = '停止灰度&&正式发布';
                   this.stopBeta();
                 }
                 this.successDialog.current.getInstance().openDialog({
