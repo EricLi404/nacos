@@ -420,7 +420,7 @@ class ConfigEditor extends React.Component {
     };
 
     return request.get('v1/cs/configs', { params }).then(res => {
-      return res.data;
+      return res.data !== null;
     });
   }
 
