@@ -329,12 +329,14 @@ class ConfigEditor extends React.Component {
     const stringify = require('qs/lib/stringify');
     this.setState({ loading: true });
     if (this.isBetaIng()) {
+      this.setState({ loading: false });
       return new Promise(resolve => {
         Dialog.alert({
           content: '有 Beta 正在进行，请等待或刷新后重试',
         });
       });
     } else if (this.isConfChange()) {
+      this.setState({ loading: false });
       return new Promise(resolve => {
         Dialog.alert({
           content: '配置内容在你更改前有提交，请刷新页面重新更改',
@@ -418,7 +420,7 @@ class ConfigEditor extends React.Component {
     };
 
     return request.get('v1/cs/configs', { params }).then(res => {
-      return !res.data;
+      return res.data;
     });
   }
 
