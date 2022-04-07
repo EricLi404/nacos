@@ -332,7 +332,6 @@ class ConfigEditor extends React.Component {
       this.setState({ loading: false });
       return new Promise(resolve => {
         Dialog.alert({
-          title: this.isBetaIng(),
           content: '有 Beta 正在进行，请等待或刷新后重试',
         });
       });
@@ -419,14 +418,10 @@ class ConfigEditor extends React.Component {
       tenant: namespace,
       beta: true,
     };
-    let beatIng = false;
 
-    request.get('v1/cs/configs', { params }).then(res => {
-      if (res.data) {
-        beatIng = true;
-      }
+    return request.get('v1/cs/configs', { params }).then(res => {
+      return res.data !== null;
     });
-    return beatIng;
   }
 
   stopBeta() {
