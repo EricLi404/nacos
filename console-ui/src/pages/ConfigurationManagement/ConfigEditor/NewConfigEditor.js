@@ -307,7 +307,7 @@ class ConfigEditor extends React.Component {
     });
   }
 
-  _publishConfig(beta = false) {
+  async _publishConfig(beta = false) {
     const { betaIps, isNewConfig } = this.state;
     const headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
     if (beta) {
@@ -328,14 +328,14 @@ class ConfigEditor extends React.Component {
     }
     const stringify = require('qs/lib/stringify');
     this.setState({ loading: true });
-    if (this.isBetaIng()) {
+    if (await this.isBetaIng()) {
       this.setState({ loading: false });
       return new Promise(resolve => {
         Dialog.alert({
           content: '有 Beta 正在进行，请等待或刷新后重试',
         });
       });
-    } else if (this.isConfChange()) {
+    } else if (await this.isConfChange()) {
       this.setState({ loading: false });
       return new Promise(resolve => {
         Dialog.alert({
