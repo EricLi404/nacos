@@ -203,8 +203,11 @@ class ConfigEditor extends React.Component {
     });
   }
 
-  openDiff(cbName) {
+  openDiff(cbName, isBeta, tabActiveKey) {
     this.diffcb = cbName;
+    if (cbName === 'publish' && isBeta && tabActiveKey === 'beta') {
+      this.diffcb = 'publish_no_check';
+    }
     let leftValue = this.monacoEditor.getValue();
     let rightValue = this.codeVal || '';
     leftValue = leftValue.replace(/\r\n/g, '\n').replace(/\n/g, '\r\n');
@@ -265,6 +268,34 @@ class ConfigEditor extends React.Component {
         Dialog.confirm({
           content: locale.codeValErrorPrompt,
           onOk: () => resolve(this._publishConfig()),
+          onCancel: () => resolve(false),
+        });
+      });
+    }
+  }
+
+  publish_no_check() {
+    const { locale = {} } = this.props;
+    const { type } = this.state.form;
+    if (this.state.isNewConfig) {
+      this.validation();
+    }
+    const content = this.getCodeVal();
+    if (!content) {
+      return;
+    }
+    if (
+      validateContent.validate({
+        content,
+        type,
+      })
+    ) {
+      return this._publishConfig_no_check();
+    } else {
+      return new Promise(resolve => {
+        Dialog.confirm({
+          content: locale.codeValErrorPrompt,
+          onOk: () => resolve(this._publishConfig_no_check()),
           onCancel: () => resolve(false),
         });
       });
@@ -359,6 +390,44 @@ class ConfigEditor extends React.Component {
         return res;
       });
     }
+  }
+
+  _publishConfig_no_check(beta = false) {
+    const { betaIps, isNewConfig } = this.state;
+    const headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
+    if (beta) {
+      headers.betaIps = betaIps;
+    }
+    const form = {
+      ...this.state.form,
+      content: this.getCodeVal(),
+      betaIps,
+    };
+    const payload = {};
+    Object.keys(form).forEach(key => {
+      payload[key] = form[key];
+    });
+    let configTags = this.state.form.config_tags;
+    if (configTags.length > 0) {
+      payload.config_tags = configTags.join(',');
+    }
+    const stringify = require('qs/lib/stringify');
+    this.setState({ loading: true });
+    return request({
+      url: 'v1/cs/configs',
+      method: 'post',
+      data: stringify(payload),
+      headers,
+    }).then(res => {
+      if (res) {
+        if (isNewConfig) {
+          this.setState({ isNewConfig: false });
+        }
+        this.getConfig(beta);
+      }
+      this.setState({ loading: false });
+      return res;
+    });
   }
 
   publishBeta() {
@@ -758,15 +827,15 @@ class ConfigEditor extends React.Component {
                   size="large"
                   type="primary"
                   disabled={!betaIps || betaPublishSuccess}
-                  onClick={() => this.openDiff('publishBeta')}
+                  onClick={() => this.openDiff('publishBeta', isBeta, tabActiveKey)}
                 >
                   {locale.release}
                 </Button>
               )}
               <Button
                 type="primary"
-                disabled={tabActiveKey === 'production'}
-                onClick={() => this.openDiff('publish')}
+                disabled={(isBeta && tabActiveKey === '') || tabActiveKey === 'production'}
+                onClick={() => this.openDiff('publish', isBeta, tabActiveKey)}
               >
                 {locale.publish}
               </Button>
@@ -784,19 +853,20 @@ class ConfigEditor extends React.Component {
                 if (!res) {
                   return;
                 }
-                let title = locale.toedit;
+                let title = '全量发布';
                 if (isNewConfig) {
                   title = locale.newConfigEditor;
                 }
                 if (this.diffcb === 'publishBeta') {
                   title = locale.betaPublish;
                 }
-                if (this.diffcb === 'publish' && tabActiveKey === 'beta') {
-                  title = '停止灰度&&正式发布';
+                if (this.diffcb === 'publish_no_check' && tabActiveKey === 'beta') {
+                  title = '停止灰度&&全量发布';
                   this.stopBeta();
                 }
                 this.successDialog.current.getInstance().openDialog({
                   title: <div>{title}</div>,
+                  content: '成功!',
                   isok: true,
                   ...form,
                 });
