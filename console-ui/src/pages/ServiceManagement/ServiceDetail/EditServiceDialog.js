@@ -37,7 +37,10 @@ class EditServiceDialog extends React.Component {
       isCreate: false,
       editService: {},
       editServiceDialogVisible: false,
-      errors: { name: {}, protectThreshold: {} },
+      errors: {
+        name: {},
+        protectThreshold: {},
+      },
       selectorTypes: [],
     };
     this.show = this.show.bind(this);
@@ -49,7 +52,11 @@ class EditServiceDialog extends React.Component {
     if (Object.keys(metadata).length) {
       editService.metadataText = JSON.stringify(metadata, null, '\t');
     }
-    this.setState({ editService, editServiceDialogVisible: true, isCreate: !name });
+    this.setState({
+      editService,
+      editServiceDialogVisible: true,
+      isCreate: !name,
+    });
 
     // query selector types
     this.getSelectorTypes();
@@ -71,7 +78,10 @@ class EditServiceDialog extends React.Component {
     }
     for (const key in field) {
       if (!field[key]) {
-        errors[key] = { validateState: 'error', help: helpMap[key] };
+        errors[key] = {
+          validateState: 'error',
+          help: helpMap[key],
+        };
         this.setState({ errors });
         return false;
       }
@@ -83,7 +93,14 @@ class EditServiceDialog extends React.Component {
     const { isCreate } = this.state;
     const editService = Object.assign({}, this.state.editService);
     const { name, protectThreshold, groupName, metadataText = '', selector } = editService;
-    if (!this.validator({ name, protectThreshold })) return;
+    if (
+      !this.validator({
+        name,
+        protectThreshold,
+      })
+    ) {
+      return;
+    }
     request({
       method: isCreate ? 'POST' : 'PUT',
       url: 'v1/ns/service',
@@ -135,17 +152,17 @@ class EditServiceDialog extends React.Component {
 
   getSelectorTypes() {
     request({
-        method: 'GET',
-        url: 'v1/ns/service/selector/types',
-        success: response => {
-          if (response.code !== 200) {
-            Message.error(response.message);
-            return;
-          }
-          this.setState({
-            selectorTypes: response.data
-          });
+      method: 'GET',
+      url: 'v1/ns/service/selector/types',
+      success: response => {
+        if (response.code !== 200) {
+          Message.error(response.message);
+          return;
         }
+        this.setState({
+          selectorTypes: response.data,
+        });
+      },
     });
   }
 
@@ -214,11 +231,18 @@ class EditServiceDialog extends React.Component {
             <Select
               className="full-width"
               defaultValue={selector.type}
-              onChange={type => this.onChangeCluster({ selector: { ...selector, type } })}
-            >
-              {
-                selectorTypes.map((selectorType) => (<Select.Option value={selectorType}>{selectorType}</Select.Option>))
+              onChange={type =>
+                this.onChangeCluster({
+                  selector: {
+                    ...selector,
+                    type,
+                  },
+                })
               }
+            >
+              {selectorTypes.map(selectorType => (
+                <Select.Option value={selectorType}>{selectorType}</Select.Option>
+              ))}
             </Select>
           </Form.Item>
           {selector.type !== 'none' && (
@@ -226,7 +250,12 @@ class EditServiceDialog extends React.Component {
               <Input.TextArea
                 value={selector.expression}
                 onChange={expression =>
-                  this.onChangeCluster({ selector: { ...selector, expression } })
+                  this.onChangeCluster({
+                    selector: {
+                      ...selector,
+                      expression,
+                    },
+                  })
                 }
               />
             </Form.Item>

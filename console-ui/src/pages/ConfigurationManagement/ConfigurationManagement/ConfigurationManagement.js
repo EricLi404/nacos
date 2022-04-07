@@ -391,7 +391,9 @@ class ConfigurationManagement extends React.Component {
           triggerType={'click'}
         >
           <Menu>
-            <Menu.Item onClick={this.removeConfig.bind(this, record)}>{locale.deleteAction}</Menu.Item>
+            <Menu.Item onClick={this.removeConfig.bind(this, record)}>
+              {locale.deleteAction}
+            </Menu.Item>
           </Menu>
         </Dropdown>
       </div>
@@ -628,9 +630,10 @@ class ConfigurationManagement extends React.Component {
           </div>
         ),
         onOk: () => {
-          const url = `v1/cs/configs?delType=ids&ids=${Array.from(configsTableSelected.keys()).join(
-            ','
-          )}&tenant=` + self.state.nownamespace_id;
+          const url =
+            `v1/cs/configs?delType=ids&ids=${Array.from(configsTableSelected.keys()).join(
+              ','
+            )}&tenant=` + self.state.nownamespace_id;
           request({
             url,
             type: 'delete',
