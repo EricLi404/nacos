@@ -302,13 +302,9 @@ class ConfigEditor extends React.Component {
       tenant: namespace,
       show: 'all',
     };
-    let change = false;
-    request.get('v1/cs/configs', { params }).then(res => {
-      if (this.codeVal !== res.content) {
-        change = true;
-      }
+    return request.get('v1/cs/configs', { params }).then(res => {
+      return this.codeVal !== res.content;
     });
-    return change;
   }
 
   _publishConfig(beta = false) {
@@ -336,6 +332,7 @@ class ConfigEditor extends React.Component {
       this.setState({ loading: false });
       return new Promise(resolve => {
         Dialog.alert({
+          title: this.isBetaIng(),
           content: '有 Beta 正在进行，请等待或刷新后重试',
         });
       });
