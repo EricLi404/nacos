@@ -391,7 +391,7 @@ class ConfigurationManagement extends React.Component {
           triggerType={'click'}
         >
           <Menu>
-            <Menu.Item onClick={this.removeConfig.bind(this, record)}>
+            <Menu.Item disabled={true} onClick={this.removeConfig.bind(this, record)}>
               {locale.deleteAction}
             </Menu.Item>
           </Menu>
@@ -1308,6 +1308,7 @@ class ConfigurationManagement extends React.Component {
                     <Button
                       warning={item.warning}
                       type="primary"
+                      disabled={true}
                       style={{ marginRight: 10 }}
                       onClick={item.onClick}
                       data-spm-click={`gostr=/aliyun;locaid=${item.locaid}`}
