@@ -1302,6 +1302,7 @@ class ConfigurationManagement extends React.Component {
 
                     {
                       text: locale.clone,
+                      disabled: false,
                       locaid: 'configsDelete',
                       onClick: () => this.cloneSelectedDataConfirm(),
                     },
@@ -1309,6 +1310,7 @@ class ConfigurationManagement extends React.Component {
                     <Button
                       warning={item.warning}
                       type="primary"
+                      disabled={item.disabled}
                       style={{ marginRight: 10 }}
                       onClick={item.onClick}
                       data-spm-click={`gostr=/aliyun;locaid=${item.locaid}`}
