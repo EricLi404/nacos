@@ -1296,6 +1296,7 @@ class ConfigurationManagement extends React.Component {
                       warning: true,
                       text: locale.deleteAction,
                       locaid: 'configsDelete',
+                      disabled: true,
                       onClick: () => this.multipleSelectionDeletion(),
                     },
 
@@ -1308,7 +1309,6 @@ class ConfigurationManagement extends React.Component {
                     <Button
                       warning={item.warning}
                       type="primary"
-                      disabled={true}
                       style={{ marginRight: 10 }}
                       onClick={item.onClick}
                       data-spm-click={`gostr=/aliyun;locaid=${item.locaid}`}
