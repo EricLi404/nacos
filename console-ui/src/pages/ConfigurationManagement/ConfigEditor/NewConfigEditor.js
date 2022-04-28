@@ -108,6 +108,7 @@ class ConfigEditor extends React.Component {
     this.successDialog = React.createRef();
     this.diffEditorDialog = React.createRef();
     this.dialog = React.createRef();
+    this.initFullScreenEvent();
   }
 
   componentDidMount() {
@@ -743,6 +744,7 @@ class ConfigEditor extends React.Component {
               <Input.TextArea
                 value={form.desc}
                 aria-label="TextArea"
+                rows="2"
                 onChange={desc => this.changeForm({ desc })}
               />
             </Form.Item>
