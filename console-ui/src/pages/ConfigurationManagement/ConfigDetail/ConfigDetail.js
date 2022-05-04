@@ -205,7 +205,7 @@ class ConfigDetail extends React.Component {
       roundedSelection: false,
       readOnly: true,
       lineNumbersMinChars: true,
-      theme: 'vs-dark',
+      theme: 'vs',
       wordWrapColumn: 120,
       folding: false,
       showFoldingControls: 'always',

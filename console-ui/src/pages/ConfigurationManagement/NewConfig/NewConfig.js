@@ -130,7 +130,7 @@ class NewConfig extends React.Component {
       roundedSelection: false,
       readOnly: false,
       lineNumbersMinChars: true,
-      theme: 'vs-dark',
+      theme: 'vs',
       folding: true,
       showFoldingControls: 'always',
       cursorStyle: 'line',
